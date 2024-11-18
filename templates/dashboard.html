@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cloud Security Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            height: 100vh;
+            min-width: 320px;
+        }
+        .dashboard-container {
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 900px;
+            padding: 30px;
+            margin: 20px;
+            box-sizing: border-box;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+        h2 {
+            color: #2a2a2a;
+            font-size: 1.8em;
+            margin-bottom: 10px;
+        }
+        .form-container {
+            margin-bottom: 30px;
+        }
+        label {
+            font-size: 1.1em;
+            color: #333;
+            margin-bottom: 8px;
+            display: block;
+        }
+        input[type="text"], input[type="password"], select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 1em;
+            background-color: #f9f9f9;
+            box-sizing: border-box;
+            transition: border 0.3s ease;
+        }
+        input[type="text"]:focus, input[type="password"]:focus, select:focus {
+            border-color: #4CAF50;
+            outline: none;
+        }
+        input[type="submit"] {
+            width: 100%;
+            padding: 12px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        input[type="submit"]:hover {
+            background-color: #45a049;
+        }
+        .log-list, .anomaly-list {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+        .log-item, .anomaly-item {
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            background-color: #f8f8f8;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        .log-item:hover, .anomaly-item:hover {
+            background-color: #e9e9e9;
+        }
+        .log-item {
+            border-left: 6px solid #4CAF50;
+        }
+        .anomaly-item {
+            border-left: 6px solid #FF6347;
+        }
+        .timestamp {
+            font-size: 0.9em;
+            color: #777;
+        }
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 0.8em;
+            color: #555;
+        }
+        @media (max-width: 600px) {
+            .dashboard-container {
+                width: 100%;
+                margin: 0;
+            }
+            h1 {
+                font-size: 2em;
+            }
+            h2 {
+                font-size: 1.5em;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-container">
+        <h1>Cloud Security Dashboard</h1>
+
+        <!-- AWS credentials form -->
+        <div class="form-container">
+            <form action="/start_monitoring" method="POST">
+                <label for="aws_access_key">AWS Access Key:</label>
+                <input type="text" id="aws_access_key" name="aws_access_key" required>
+
+                <label for="aws_secret_key">AWS Secret Key:</label>
+                <input type="password" id="aws_secret_key" name="aws_secret_key" required>
+
+                <label for="region">Region:</label>
+                <select id="region" name="region" required>
+                    <option value="ap-south-1">AP South 1</option>
+                    <option value="us-west-2">US West (Oregon)</option>
+                    <option value="eu-west-1">EU (Ireland)</option>
+                    <option value="ap-southeast-1">Asia Pacific (Singapore)</option>
+                    <option value="ap-northeast-1">Asia Pacific (Tokyo)</option>
+                    <option value="sa-east-1">South America (Sao Paulo)</option>
+                    <!-- Add more regions as needed -->
+                </select>
+
+                <input type="submit" value="Start Monitoring">
+            </form>
+        </div>
+
+        <div>
+            <h2>Recent Logs</h2>
+            {% if logs %}
+                <ul class="log-list">
+                    {% for log in logs %}
+                        <li class="log-item">
+                            <strong>{{ log.EventName }}</strong><br>
+                            <span class="timestamp">{{ log.EventTime }}</span><br>
+                            <p>{{ log.details }}</p>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>No logs available.</p>
+            {% endif %}
+        </div>
+
+        <div>
+            <h2>Detected Anomalies</h2>
+            {% if anomalies %}
+                <ul class="anomaly-list">
+                    {% for anomaly in anomalies %}
+                        <li class="anomaly-item">
+                            <strong>{{ anomaly.EventName }}</strong><br>
+                            <span class="timestamp">{{ anomaly.EventTime }}</span><br>
+                            <p>
+                                EventId: {{ anomaly.EventId }}<br>
+                                EventSource: {{ anomaly.EventSource }}<br>
+                                Resources: 
+                                <ul>
+                                    {% for resource in anomaly.Resources %}
+                                        <li>{{ resource.ResourceType }}: {{ resource.ResourceName }}</li>
+                                    {% endfor %}
+                                </ul>
+                                CloudTrail Event: {{ anomaly.CloudTrailEvent }}
+                            </p>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>No anomalies detected.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2024 Cloud Security Dashboard</p>
+    </footer>
+
+</body>
+</html>
